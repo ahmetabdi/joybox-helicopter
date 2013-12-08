@@ -3,22 +3,22 @@ class GameLayer < Joybox::Core::Layer
 
   def on_enter
     init_shared
-    layout_menu
-    layout_title
+    init_menu
+    init_score
 
     schedule_update do |dt|
       @timer += 1
       check_within_bounds(@orb)
       controls
       puts "#{@timer}"
-      @score_label.setString "#{@timer}"
+      @score.setString "#{@timer}"
     end
   end
 
   def init_shared
-    background = Sprite.new file_name: 'background.jpg', position: Screen.center
+    background = Sprite.new file_name: 'Images/background.jpg', position: Screen.center
     self << background
-    @orb = Sprite.new file_name: 'orb.png', position: [Screen.half_width, 25], alive: true
+    @orb = Sprite.new file_name: 'Images/orb.png', position: [Screen.half_width, 25], alive: true
     self << @orb
     @timer = 0
     @held_down = false
@@ -26,13 +26,13 @@ class GameLayer < Joybox::Core::Layer
     load_tiles
   end
 
-  def layout_title
-    @score_label = CCLabelBMFont.labelWithString "0", fntFile: "Fonts/bitmapFont.fnt"
-    self << @score_label
-    @score_label.position = [ Screen.half_width, Screen.height - 35]
+  def init_score
+    @score = CCLabelBMFont.labelWithString "0", fntFile: "Fonts/bitmapFont.fnt"
+    self << @score
+    @score.position = [ Screen.half_width, Screen.height - 35]
   end
 
-  def layout_menu
+  def init_menu
     MenuLabel.default_font_size = 18
 
     reset_menu_item = MenuLabel.new text: 'Reset' do |menu_item|
@@ -70,7 +70,7 @@ class GameLayer < Joybox::Core::Layer
   def load_tiles
     @tiles = 2.times.map do |row|
       25.times.map do |column|
-        Sprite.new file_name: 'dirt.png', position: [
+        Sprite.new file_name: 'Images/dirt.png', position: [
           column * 32 + 16,
           row * (Screen.height - 48) + 16
         ]
