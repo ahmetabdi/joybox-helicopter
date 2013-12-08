@@ -4,12 +4,14 @@ class GameLayer < Joybox::Core::Layer
   def on_enter
     init_shared
     layout_menu
+    layout_title
 
     schedule_update do |dt|
       @timer += 1
       check_within_bounds(@orb)
       controls
       puts "#{@timer}"
+      @score_label.setString "#{@timer}"
     end
   end
 
@@ -24,14 +26,11 @@ class GameLayer < Joybox::Core::Layer
     load_tiles
   end
 
-  # def score
-  #   @label ||= []
-  #   label = Label.new text: "To the infinity and beyond #{@timer}", position: Screen.center
-  #   label.color = '800617'.to_color
-  #   self << label
-  #   @label << label
-  #   self.removeChild(@label.first)
-  # end
+  def layout_title
+    @score_label = CCLabelBMFont.labelWithString "0", fntFile: "Fonts/bitmapFont.fnt"
+    self << @score_label
+    @score_label.position = [ Screen.half_width, Screen.height - 35]
+  end
 
   def layout_menu
     MenuLabel.default_font_size = 18
