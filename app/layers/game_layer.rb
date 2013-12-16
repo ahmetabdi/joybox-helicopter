@@ -1,4 +1,6 @@
 class GameLayer < Joybox::Core::Layer
+  MaximumObjects = 10
+
   scene
 
   def on_enter
@@ -29,7 +31,7 @@ class GameLayer < Joybox::Core::Layer
   def init_score
     @score = CCLabelBMFont.labelWithString "0", fntFile: "Fonts/bitmapFont.fnt"
     self << @score
-    @score.position = [ Screen.half_width, Screen.height - 35]
+    @score.position = [ Screen.half_width, Screen.height - 32]
   end
 
   def init_menu
@@ -45,33 +47,42 @@ class GameLayer < Joybox::Core::Layer
     self.add_child(menu, z: 1)
   end
 
-  # def countdown
-  #   case @timer
-  #   when 50
-  #     @three = Sprite.new file_name: '3.png', position: Screen.center
-  #     self << @three
-  #   when 100
-  #     self.removeChild(@three)
-  #     @two = Sprite.new file_name: '2.png', position: Screen.center
-  #     self << @two
-  #   when 150
-  #     self.removeChild(@two)
-  #     @one = Sprite.new file_name: '1.png', position: Screen.center
-  #     self << @one
-  #   when 200
-  #     self.removeChild(@one)
-  #     @lets_do_this = Sprite.new file_name: 'lets_do_this.png', position: Screen.center
-  #     self << @lets_do_this
-  #   when 250
-  #     self.removeChild(@lets_do_this)
-  #   end
-  # end
+  def launch_obstacles
+    @obstacles ||= Array.new
+
+    if @obstacles.size <= MaximumObjects
+      missing_asteroids = MaximumObjects - @obstacles.size
+
+      missing_asteroids.times do
+        asteroid = AsteroidSprite.new
+
+        move_action = Move.to position: asteroid.end_position, duration: 4.0
+        callback_action = Callback.with { |asteroid| @obstacles.delete asteroid }
+        asteroid.run_action Sequence.with actions: [move_action, callback_action]
+
+        self << asteroid
+        @obstacles << asteroid
+      end
+    end
+  end
+
+  def check_for_collisions
+    @obstacles.each do |asteroid|
+      if CGRectIntersectsRect(asteroid.bounding_box, @rocket.bounding_box)
+        @obstacles.each(&:stop_all_actions)
+
+        @rocket[:alive] = false
+        @rocket.run_action Blink.with times: 20, duration: 3.0
+        break
+      end
+    end
+  end
 
   def load_tiles
     @tiles = 2.times.map do |row|
-      25.times.map do |column|
+      100.times.map do |column|
         Sprite.new file_name: 'Images/dirt.png', position: [
-          column * 32 + 16,
+          column * 16 + 16,
           row * (Screen.height - 48) + 16
         ]
       end
@@ -97,7 +108,6 @@ class GameLayer < Joybox::Core::Layer
   end
 
   def handle_touches
-
     on_touches_began do |touches, event|
       puts "Going Up"
       @held_down = true
@@ -107,7 +117,6 @@ class GameLayer < Joybox::Core::Layer
       puts "Going Down"
       @held_down = false
     end
-
   end
 
 end
