@@ -52,7 +52,7 @@ class GameLayer < Joybox::Core::Layer
     self.add_child(menu, z: 1)
   end
 
-  def launch_obstacles
+  def launch_obstacles #Hard Mode
     @obstacles ||= Array.new
 
     if @obstacles.size <= MaximumObstacles
@@ -101,9 +101,9 @@ class GameLayer < Joybox::Core::Layer
   def controls
     if @orb[:alive]
       if @held_down
-        @orb.position = [@orb.position.x, @orb.position.y + 5]
+        @orb.position = [@orb.position.x, @orb.position.y + 3]
       else
-        @orb.position = [@orb.position.x, @orb.position.y - 5]
+        @orb.position = [@orb.position.x, @orb.position.y - 3]
       end
     end
   end
@@ -117,7 +117,6 @@ class GameLayer < Joybox::Core::Layer
   end
 
   def check_out_of_screen(object)
-    puts object.position.x
     if object.position.x < 0
       @obstacles.delete(object)
       self.removeChild(object)
