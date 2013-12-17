@@ -1,5 +1,5 @@
 class GameLayer < Joybox::Core::Layer
-  MaximumObjects = 10
+  MaximumObstacles = 10
 
   scene
 
@@ -10,10 +10,15 @@ class GameLayer < Joybox::Core::Layer
 
     schedule_update do |dt|
       @timer += 1
-      check_within_bounds(@orb)
+
       controls
-      puts "#{@timer}"
-      @score.setString "#{@timer}"
+      #puts "#{@timer}"
+      @score.setString "#{@timer}" unless @orb[:alive] == false
+      if (@timer % [100, 68, 86, 95].sample == 0)
+        launch_obstacles
+      end
+      check_for_collisions if @orb[:alive]
+      check_within_bounds(@orb)
     end
   end
 
@@ -25,7 +30,7 @@ class GameLayer < Joybox::Core::Layer
     @timer = 0
     @held_down = false
     handle_touches
-    load_tiles
+    launch_obstacles
   end
 
   def init_score
@@ -50,52 +55,56 @@ class GameLayer < Joybox::Core::Layer
   def launch_obstacles
     @obstacles ||= Array.new
 
-    if @obstacles.size <= MaximumObjects
-      missing_asteroids = MaximumObjects - @obstacles.size
+    if @obstacles.size <= MaximumObstacles
+      missing_obstacles = MaximumObstacles - @obstacles.size
 
-      missing_asteroids.times do
-        asteroid = AsteroidSprite.new
+      missing_obstacles.times do
+        obstacle = Obstacle.new
 
-        move_action = Move.to position: asteroid.end_position, duration: 4.0
-        callback_action = Callback.with { |asteroid| @obstacles.delete asteroid }
-        asteroid.run_action Sequence.with actions: [move_action, callback_action]
+        move_action = Move.to position: obstacle.end_position, duration: 4.0
+        callback_action = Callback.with { |obstacle| @obstacles.delete obstacle }
+        obstacle.run_action Sequence.with actions: [move_action, callback_action]
 
-        self << asteroid
-        @obstacles << asteroid
+        self << obstacle
+        @obstacles << obstacle
       end
     end
   end
 
   def check_for_collisions
-    @obstacles.each do |asteroid|
-      if CGRectIntersectsRect(asteroid.bounding_box, @rocket.bounding_box)
+    @obstacles.each do |obstacle|
+      check_out_of_screen(obstacle)
+      if CGRectIntersectsRect(obstacle.bounding_box, @orb.bounding_box)
         @obstacles.each(&:stop_all_actions)
 
-        @rocket[:alive] = false
-        @rocket.run_action Blink.with times: 20, duration: 3.0
+        @orb[:alive] = false
+        @orb.stop_all_actions
+        @orb.run_action Blink.with times: 20, duration: 3.0
         break
       end
     end
   end
 
-  def load_tiles
-    @tiles = 2.times.map do |row|
-      100.times.map do |column|
-        Sprite.new file_name: 'Images/dirt.png', position: [
-          column * 16 + 16,
-          row * (Screen.height - 48) + 16
-        ]
-      end
-    end.flatten
+  # def load_tiles
+  #   @tiles = 2.times.map do |row|
+  #     100.times.map do |column|
+  #       Sprite.new file_name: 'Images/dirt.png', position: [
+  #         column * 16 + 16,
+  #         row * (Screen.height - 48) + 16
+  #       ]
+  #     end
+  #   end.flatten
 
-    @tiles.each { |t| self << t }
-  end
+  #   @tiles.each { |t| self << t }
+  # end
 
   def controls
-    if @held_down
-      @orb.position = [@orb.position.x, @orb.position.y + 5]
-    else
-      @orb.position = [@orb.position.x, @orb.position.y - 5]
+    if @orb[:alive]
+      if @held_down
+        @orb.position = [@orb.position.x, @orb.position.y + 5]
+      else
+        @orb.position = [@orb.position.x, @orb.position.y - 5]
+      end
     end
   end
 
@@ -104,6 +113,14 @@ class GameLayer < Joybox::Core::Layer
       object.position = [object.position.x, Screen.height - 50]
     elsif object.position.y < 25
       object.position = [object.position.x, 25]
+    end
+  end
+
+  def check_out_of_screen(object)
+    puts object.position.x
+    if object.position.x < 0
+      @obstacles.delete(object)
+      self.removeChild(object)
     end
   end
 
