@@ -1,5 +1,5 @@
 class GameLayer < Joybox::Core::Layer
-  MaximumObstacles = 10
+  MaximumObstacles = 5
 
   scene
 
@@ -14,7 +14,7 @@ class GameLayer < Joybox::Core::Layer
       controls
       #puts "#{@timer}"
       @score.setString "#{@timer}" unless @orb[:alive] == false
-      if (@timer % [100, 68, 86, 95].sample == 0)
+      if (@timer % 25 == 0)
         launch_obstacles
       end
       check_for_collisions if @orb[:alive]
@@ -52,7 +52,7 @@ class GameLayer < Joybox::Core::Layer
     self.add_child(menu, z: 1)
   end
 
-  def launch_obstacles #Hard Mode
+  def launch_obstacles
     @obstacles ||= Array.new
 
     if @obstacles.size <= MaximumObstacles
@@ -101,9 +101,9 @@ class GameLayer < Joybox::Core::Layer
   def controls
     if @orb[:alive]
       if @held_down
-        @orb.position = [@orb.position.x, @orb.position.y + 3]
+        @orb.position = [@orb.position.x, @orb.position.y + 4]
       else
-        @orb.position = [@orb.position.x, @orb.position.y - 3]
+        @orb.position = [@orb.position.x, @orb.position.y - 4]
       end
     end
   end
