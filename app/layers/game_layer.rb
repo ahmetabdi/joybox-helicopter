@@ -25,7 +25,7 @@ class GameLayer < Joybox::Core::Layer
   def init_shared
     background = Sprite.new file_name: 'Images/background.jpg', position: Screen.center
     self << background
-    @orb = Sprite.new file_name: 'Images/orb.png', position: [Screen.half_width, 25], alive: true
+    @orb = Sprite.new file_name: 'Images/orb.png', position: [Screen.half_width / 2, 25], alive: true
     self << @orb
     @timer = 0
     @held_down = false
@@ -125,12 +125,10 @@ class GameLayer < Joybox::Core::Layer
 
   def handle_touches
     on_touches_began do |touches, event|
-      puts "Going Up"
       @held_down = true
     end
 
     on_touches_ended do |touches, event|
-      puts "Going Down"
       @held_down = false
     end
   end
